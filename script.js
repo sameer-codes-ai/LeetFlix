@@ -25,8 +25,4 @@ clearBtn.addEventListener("click", () => {
     btn.classList.remove("active");                       // remove active class
     localStorage.setItem(`tagButton_${index}`, false);    // clear localStorage
   });
-<<<<<<< HEAD
 });
-=======
-});
->>>>>>> 483d8621df3da13c7cfe0a5a90b9c75852f64a87
