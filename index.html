@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LeetFlix</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
+</head>
+
+<body>
+    <header>
+        <div class="nav-top">
+            <h1>LeetFlix</h1>
+            <nav>
+                <a href="#">Explore</a>
+                <a href="#" class="active">Shows</a>
+                <a href="#">Contest</a>
+                <a href="#">Discuss</a>
+                <a href="#">Interview</a>
+                <a href="#">Store</a>
+            </nav>
+        </div>
+        <div class="nav-right">
+            <a href="#" class="premium">Premium</a>
+        </div>
+    </header>
+
+    <div class="container">
+        <aside class="sidebar">
+            <div class="watchlist"><a class="sidebar-a" href="#">WatchList</a></div>
+            <div class="bingewatch-plan"><a class="sidebar-a" href="#">Bingewatch Plan</a></div>
+            <div class="favs">
+                <div><a href="#">Favorite</a></div>
+                <div><a href="#">Rewatch</a></div>
+            </div>
+        </aside>
+
+        <main>
+            <div class="filters">
+                <input type="text" id="searchInput" placeholder="Search questions" onkeyup="filterProblems()" />
+                <div class="tags">
+                    <button id="clearFilters">Remove All Filters</button>
+                    <button>Thrillers</button>
+                    <button>Horror</button>
+                    <button>Comedy</button>
+                    <button>Action</button>
+                    <button>Sci-Fi</button>
+                    <button>Animated</button>
+                    <button>Adventure</button>
+                </div>
+            </div>
+
+            <div class="problems" id="problemsList">
+                <div class="problem">
+                    <a href="#">Game of Thrones</a>
+                </div>
+                <div class="problem">
+                    <a href="#">Breaking Bad</a>
+                </div>
+                <div class="problem">
+                    <a href="#">Modern Family</a>
+                </div>
+                <div class="problem">
+                    <a href="#">Friends</a>
+                </div>
+                <div class="problem">
+                    <a href="#">Squid Game S3</a>
+                </div>
+            </div>
+        </main>
+
+        <aside class="right-sidebar">
+            <div class="calendar">
+                <h3>Upcoming Series</h3>
+                <span>Stranger Things S5</span>
+                <span>Ironheart</span>
+                <span>Smoke</span>
+                <span></span>
+            </div>
+            <div class="trending_series">
+                <h3>Trending Series</h3>
+                <span>Squid Game</span>
+                <span>Stranger Things S4</span>
+                <span>Siren</span>
+                <span>Wednesday S2</span>
+                <span>Severance</span>
+                <span>Modern Family</span>
+            </div>
+        </aside>
+    </div>
+</body>
+
+</html>
