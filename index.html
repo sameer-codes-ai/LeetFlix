@@ -11,7 +11,7 @@
 
 <body>
     <header>
-        <div class="nav-left">
+        <div class="nav-top">
             <h1>LeetFlix</h1>
             <nav>
                 <a href="#">Explore</a>
@@ -23,17 +23,17 @@
             </nav>
         </div>
         <div class="nav-right">
-            <button class="premium">Premium</button>
+            <a href="#" class="premium">Premium</a>
         </div>
     </header>
 
     <div class="container">
         <aside class="sidebar">
-            <div class="library">WatchList</div>
-            <div class="study-plan">Bingewatch Plan</div>
-            <div class="my-lists">
-                <div>Favorite</div>
-                <div>Rewatch</div>
+            <div class="watchlist"><a class="sidebar-a" href="#">WatchList</a></div>
+            <div class="bingewatch-plan"><a class="sidebar-a" href="#">Bingewatch Plan</a></div>
+            <div class="favs">
+                <div><a href="#">Favorite</a></div>
+                <div><a href="#">Rewatch</a></div>
             </div>
         </aside>
 
@@ -41,6 +41,7 @@
             <div class="filters">
                 <input type="text" id="searchInput" placeholder="Search questions" onkeyup="filterProblems()" />
                 <div class="tags">
+                    <button id="clearFilters">Remove All Filters</button>
                     <button>Thrillers</button>
                     <button>Horror</button>
                     <button>Comedy</button>
@@ -82,6 +83,7 @@
                 <h3>Trending Series</h3>
                 <span>Squid Game</span>
                 <span>Stranger Things S4</span>
+                <span>Siren</span>
                 <span>Wednesday S2</span>
                 <span>Severance</span>
                 <span>Modern Family</span>
