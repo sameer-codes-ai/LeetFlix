@@ -1,4 +1,6 @@
-Welcome to **Leetflix** – your one-stop platform to track Binge-Watching progress, compete on leaderboards, engage in discussions, and flaunt those green contribution bubbles like a boss. Inspired by LeetCode and Netflix, but cooler 😎
+# 🚀 LeetFlix - Level Up Your BingeWatching Journey
+
+Welcome to **LeetFlix** – your one-stop platform to track Binge-Watching progress, compete on leaderboards, engage in discussions, and flaunt those green contribution bubbles like a boss. Inspired by LeetCode and Netflix, but cooler 😎
 
 ---
 
