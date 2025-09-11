@@ -1,6 +1,6 @@
 # 🚀 Leetflix - Level Up Your Coding Journey
 
-Welcome to **Leetflix** – your one-stop platform to track coding progress, compete on leaderboards, and flaunt those green contribution bubbles like a coding boss. Inspired by LeetCode, but cooler 😎
+Welcome to **Leetflix** – your one-stop platform to track Binge-Watching progress, compete on leaderboards, and flaunt those green contribution bubbles like a pro "Show-Watcher" . Inspired by LeetCode, but cooler 😎
 
 ---
 
