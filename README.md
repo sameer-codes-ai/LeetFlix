@@ -1,3 +1,4 @@
+````markdown
 # 🚀 LeetFlix - Level Up Your BingeWatching Journey
 
 Welcome to **LeetFlix** – your one-stop platform to track Binge-Watching progress, compete on leaderboards, engage in discussions, and flaunt those green contribution bubbles like a boss. Inspired by LeetCode and Netflix, but cooler 😎
@@ -19,48 +20,46 @@ Welcome to **LeetFlix** – your one-stop platform to track Binge-Watching progr
 
 - **Frontend:** HTML | CSS | JavaScript  
 - **Backend:** Flask (Python)  
-- **Database:** MySQL 
+- **Database:** MySQL (Dockerized)
 
 ---
 
 ## 🚧 What’s Next
 
 - ✨ More gamification features  
-- ✨ Profile customization
-- ✨ Github/Leetcode inspired annual contribution heatmap
+- ✨ Profile customization  
+- ✨ Github/Leetcode inspired annual contribution heatmap  
 - ✨ Challenges & badges  
-- ✨ Dark mode
+- ✨ Dark mode  
 
 ---
 
-## 🚀 How to Run Locally
+## 🚀 How to Run Locally (Docker Way)
 
-1. Clone the repo:  
-   ```bash
-   git clone https://github.com/your-username/leetflix.git
-   cd leetflix
+1️⃣ Clone the repo:  
+```bash
+git clone https://github.com/sameer-codes-ai/LeetFlix
+cd leetflix
 ````
 
-2. Install dependencies:
+2️⃣ Make sure you have [Docker](https://www.docker.com/get-started) installed.
 
-   ```bash
-   pip install -r requirements.txt
-   ```
+3️⃣ Spin up everything (app + forum + MySQL):
 
-3. Set up the database:
+```bash
+docker-compose up --build
+```
 
-   ```bash
-   flask db upgrade
-   ```
+4️⃣ Open in browser:
 
-4. Run the app:
+* App → [http://localhost:5000](http://localhost:5000)
+* Forum → [http://localhost:5001](http://localhost:5001)
 
-   ```bash
-   flask run
-   ```
+5️⃣ Stop containers when done:
 
-5. Open in browser:
-   `http://localhost:5000`
+```bash
+docker-compose down
+```
 
 ---
 
@@ -68,14 +67,14 @@ Welcome to **LeetFlix** – your one-stop platform to track Binge-Watching progr
 
 We track your daily trivia grind and display it in a cool calendar heatmap 💚
 
-
+---
 
 ## 🏆 Leaderboard
 
 Compete with others and get your rank on the global leaderboard!
 
 * Shows top coders based on problems solved or contribution score
-* Stay motivated & flex your coding prowess
+* Stay motivated & flex your coding prowess 💪
 
 ---
 
@@ -83,15 +82,16 @@ Compete with others and get your rank on the global leaderboard!
 
 A place where users unite 💡
 
-* Post feedback, posts and comment like a pro
+* Post feedback, posts, and comments like a pro
 * Connect with the BingeWatching community 🔗
 
 ---
 
 ## 👋 Stay Connected
 
-Made with ❤️ by team CodeForSurvival for Code2Create hackathon - graVITas 2025 @VIT Vellore
-Follow us on Github
+Made with ❤️ by team CodeForSurvival for Code2Create hackathon - graVITas 2025 @ VIT Vellore
+Follow us on GitHub
+
 Sameer Kumar
 Aaryan Gupta
 Omkar Joshi
@@ -99,6 +99,8 @@ Abhinav Reddy
 
 ---
 
-Let’s build the future of next-level netflix-trivia blend together 🌐💡
+🌐 Let’s build the future of next-level Netflix-Trivia blend together 🚀💡
+
+![Docker](https://img.shields.io/badge/Docker-Ready-brightgreen)
 
 ```
