@@ -45,9 +45,9 @@ This is the easiest way to run LeetFlix without worrying about local setup or bu
 1️⃣ Make sure [Docker](https://www.docker.com/get-started) is installed and running.
 
 2️⃣ Pull the prebuilt image from Docker Hub:  
-```bash
+\`\`\`bash
 docker pull sameercodes/leetflix:latest
-```
+\`\`\`
 
 3️⃣ Run the container:
 ```bash
