@@ -47,12 +47,17 @@ This is the easiest way to run LeetFlix without worrying about local setup or bu
 2️⃣ Pull the prebuilt image from Docker Hub:  
 ```bash
 docker pull sameercodes/leetflix:latest
+```
 
 3️⃣ Run the container:
+```bash
 docker run -p 5000:5000 sameercodes/leetflix:latest
+```
 
 👉 If port 5000 is already taken, run on a different port:
+```bash
 docker run -p 5001:5000 sameercodes/leetflix:latest
+```
 
 4️⃣ Open in your browser:
 
