@@ -34,40 +34,38 @@ Welcome to **LeetFlix** – your one-stop platform to track Binge-Watching progr
 
 ---
 
-## 🚀 How to Run Locally (Docker Way)
-
-1️⃣ Clone the repo:  
-```bash
-git clone https://github.com/sameer-codes-ai/LeetFlix
-cd leetflix
-````
-
-2️⃣ Make sure you have [Docker](https://www.docker.com/get-started) installed.
-
-3️⃣ Spin up everything (app + forum + MySQL):
-
-```bash
-docker-compose build --no-cache app
-docker-compose up -d db
-# wait a little for DB to finish initialization (watch logs)
-docker-compose logs -f db
-# then start the app
-docker-compose up -d app
-docker-compose logs -f app
-```
-
-4️⃣ Open in browser:
-
-* App → [http://localhost:5000](http://localhost:5000)
-* Forum → [http://localhost:5001](http://localhost:5001)
-
-5️⃣ Stop containers when done:
-
-```bash
-docker-compose down
-```
+Here’s the clean, focused Option 2 section for your README that explains exactly how to run the machine-independent Docker image ⚡🚀
 
 ---
+
+## 🚀 How to Run Using Prebuilt Platform-Independent Docker Image (Plug & Play ⚡)
+
+This is the easiest way to run LeetFlix without worrying about local setup or building the image.
+
+1️⃣ Make sure [Docker](https://www.docker.com/get-started) is installed and running.
+
+2️⃣ Pull the prebuilt image from Docker Hub:  
+```bash
+docker pull sameercodes/leetflix:latest
+
+3️⃣ Run the container:
+docker run -p 5000:5000 sameercodes/leetflix:latest
+
+👉 If port 5000 is already taken, run on a different port:
+docker run -p 5001:5000 sameercodes/leetflix:latest
+
+4️⃣ Open in your browser:
+
+
+App → http://localhost:5000
+
+
+Or → http://localhost:5001 if you used port 5001
+
+
+
+⚡ That’s it — instant plug-and-play power 🧱💯
+
 
 ## 🎯 Contribution Bubbles
 
