@@ -10,7 +10,7 @@ services:
     ports:
       - "3306:3306"
     volumes:
-      - ./leetflix_backup.sql:/docker-entrypoint-initdb.d/leetflix_backup.sql
+      - ./leetflix_backup.sql:/docker-entrypoint-initdb.d/leetflix_backup.sql:ro
 
   app:
     build: .
@@ -19,17 +19,10 @@ services:
     ports:
       - "5000:5000"
     environment:
-      SQLALCHEMY_DATABASE_URI: "mysql+pymysql://root:root@db/leetflix"
-    depends_on:
-      - db
-
-  forum:
-    build: .
-    container_name: leetflix-forum
-    command: python forum.py
-    ports:
-      - "5001:5001"
-    environment:
+      DB_HOST: db
+      DB_USER: root
+      DB_PASSWORD: root
+      DB_NAME: leetflix
       SQLALCHEMY_DATABASE_URI: "mysql+pymysql://root:root@db/leetflix"
     depends_on:
       - db
