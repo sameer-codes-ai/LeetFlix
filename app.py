@@ -1,27 +1,32 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session
-from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime
-from werkzeug.security import generate_password_hash, check_password_hash
-
+import uuid
+import datetime
+import mysql.connector
 import os
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
+from flask_sqlalchemy import SQLAlchemy
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask_cors import CORS
 
+# --- App Initialization ---
 app = Flask(__name__)
+CORS(app) # Enable CORS for all routes
 
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('SQLALCHEMY_DATABASE_URI', 'sqlite:///default.db')
+# --- Configuration ---
+app.secret_key = os.getenv('SECRET_KEY', 'your_very_secret_key')
+
+# IMPORTANT: Replace these with your actual database credentials.
+DB_HOST = os.getenv('DB_HOST', 'localhost')
+DB_USER = os.getenv('DB_USER', 'root')
+DB_PASSWORD = os.getenv('DB_PASSWORD', '')
+DB_NAME = os.getenv('DB_NAME', 'leetflix')
+
+# SQLAlchemy Configuration
+app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
 db = SQLAlchemy(app)
 
 
-
-app = Flask(__name__)
-app.secret_key = 'your_very_secret_key'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@localhost/leetflix'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-db = SQLAlchemy(app)
-
-# --- Database Models ---
+# --- Database Models (SQLAlchemy ORM) ---
 class Users(db.Model):
     __tablename__ = 'users'
     sno = db.Column(db.Integer, primary_key=True)
@@ -29,29 +34,8 @@ class Users(db.Model):
     email = db.Column(db.String(50), nullable=False, unique=True)
     password = db.Column(db.String(255), nullable=False)
     results = db.relationship('QuizResult', backref='user', lazy=True)
-    posts = db.relationship('Post', backref='author', lazy=True)
-    comments = db.relationship('Comment', backref='user', lazy=True)
-
-class Post(db.Model):
-    __tablename__ = 'posts'
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(100), nullable=False)
-    content = db.Column(db.Text, nullable=False)
-    show_name = db.Column(db.String(100), nullable=False)
-    author_id = db.Column(db.Integer, db.ForeignKey('users.sno'), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    comments = db.relationship('Comment', backref='post', lazy=True, cascade="all, delete-orphan")
-
-class Comment(db.Model):
-    __tablename__ = 'comments'
-    id = db.Column(db.Integer, primary_key=True)
-    content = db.Column(db.Text, nullable=False)
-    post_id = db.Column(db.Integer, db.ForeignKey('posts.id'), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.sno'), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class QuizResult(db.Model):
-    # ... (rest of your models are unchanged)
     __tablename__ = 'quiz_results'
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.sno'), nullable=False)
@@ -59,7 +43,7 @@ class QuizResult(db.Model):
     season = db.Column(db.Integer, nullable=False)
     score = db.Column(db.Integer, nullable=False)
     total_questions = db.Column(db.Integer, nullable=False)
-    date_taken = db.Column(db.DateTime, default=datetime.utcnow)
+    date_taken = db.Column(db.DateTime, default=datetime.datetime.utcnow)
 
 class Question(db.Model):
     __tablename__ = 'questions'
@@ -77,71 +61,49 @@ class Option(db.Model):
     text = db.Column(db.String(255), nullable=False)
     is_correct = db.Column(db.Boolean, default=False)
 
+# This model is not used by the main app logic but is kept for schema completeness
 class Login(db.Model):
     __tablename__ = 'login'
     sno = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(50), nullable=False)
-    dateTime = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    dateTime = db.Column(db.DateTime, nullable=False, default=datetime.datetime.utcnow)
 
 
-# --- Main Routes ---
+# --- Raw DB Connection for Forum API ---
+# This uses the raw connector, as in the original forum.py
+def get_db_connection():
+    """Establishes and returns a connection to the MySQL database."""
+    try:
+        connection = mysql.connector.connect(
+            host=DB_HOST,
+            user=DB_USER,
+            password=DB_PASSWORD,
+            database=DB_NAME
+        )
+        return connection
+    except mysql.connector.Error as err:
+        print(f"Error connecting to MySQL: {err}")
+        return None
+
+# --- Main App Routes ---
 @app.route("/")
 def home():
-    # We will pass the logged-in user ID to the template
-    user_id = session.get('user_id')
-    return render_template('trivia.html', user_id=user_id)
+    return render_template('trivia.html') # Assuming you have this template
 
-# --- NEW DISCUSSION ROUTES ---
-@app.route("/discussion/<show_name>")
-def discussion_page(show_name):
-    # Fetch posts and comments for the show
-    posts = Post.query.filter_by(show_name=show_name).order_by(Post.created_at.desc()).all()
-    user_id = session.get('user_id')
-    return render_template('discussion.html', posts=posts, show_name=show_name, user_id=user_id)
-
-@app.route("/add_post/<show_name>", methods=['POST'])
-def add_post(show_name):
+@app.route("/forum")
+def forum_page():
     if 'user_id' not in session:
-        flash("You must be logged in to post.", "warning")
+        flash("Please log in to view discussions.", "warning")
         return redirect(url_for('login_page'))
 
-    title = request.form.get('title')
-    content = request.form.get('content')
-    author_id = session['user_id']
+    user_info = {
+        "id": session['user_id'],
+        "name": session['user_name'],
+        "is_admin": session.get('is_admin', False)
+    }
+    return render_template('forum.html', user_info=user_info)
 
-    if title and content:
-        new_post = Post(title=title, content=content, show_name=show_name, author_id=author_id)
-        db.session.add(new_post)
-        db.session.commit()
-        flash("Post created successfully!", "success")
-    else:
-        flash("Title and content are required.", "danger")
-        
-    return redirect(url_for('discussion_page', show_name=show_name))
-
-@app.route("/add_comment/<int:post_id>", methods=['POST'])
-def add_comment(post_id):
-    if 'user_id' not in session:
-        flash("You must be logged in to comment.", "warning")
-        return redirect(url_for('login_page'))
-
-    content = request.form.get('comment_content')
-    user_id = session['user_id']
-    
-    post = Post.query.get_or_404(post_id)
-
-    if content:
-        new_comment = Comment(content=content, post_id=post.id, user_id=user_id)
-        db.session.add(new_comment)
-        db.session.commit()
-        flash("Comment added!", "success")
-    else:
-        flash("Comment cannot be empty.", "danger")
-
-    return redirect(url_for('discussion_page', show_name=post.show_name))
-
-
-# --- Authentication Routes (UPDATED) ---
+# --- Authentication Routes ---
 @app.route("/login", methods=['GET', 'POST'])
 def login_page():
     if request.method == 'POST':
@@ -149,16 +111,17 @@ def login_page():
         password = request.form.get('password')
         user = Users.query.filter_by(email=email).first()
         if user and check_password_hash(user.password, password):
-            # --- IMPORTANT: Store user's unique ID in the session ---
-            session['user_id'] = user.sno 
-            session['user_name'] = user.email.split('@')[0]
+            session['user_id'] = user.sno
+            session['user_name'] = user.name
+            # Example of setting an admin flag. Adjust logic as needed.
+            if email.endswith('@admin.leetflix.com'):
+                session['is_admin'] = True
             flash("Login successful!", "success")
             return redirect(url_for('home'))
         else:
             flash("Invalid email or password!", "danger")
-    return render_template('login.html')
+    return render_template('login.html') # Assuming you have this template
 
-# (The rest of your routes: logout, register, quiz, seasons, etc. remain the same)
 @app.route('/logout')
 def logout():
     session.clear()
@@ -171,34 +134,34 @@ def register():
         name = request.form.get('name')
         email = request.form.get('email')
         password = request.form.get('password')
-        existing_user = Users.query.filter_by(email=email).first()
-        if existing_user:
-            flash("User already exists.", "warning")
-            return redirect(url_for('login_page'))
+        if Users.query.filter_by(email=email).first():
+            flash("An account with this email already exists.", "warning")
+            return redirect(url_for('register'))
         hashed_pw = generate_password_hash(password, method='pbkdf2:sha256')
         new_user = Users(name=name, email=email, password=hashed_pw)
         db.session.add(new_user)
         db.session.commit()
         flash("Registration successful! Please log in.", "success")
         return redirect(url_for('login_page'))
-    return render_template('register.html')
+    return render_template('register.html') # Assuming you have this template
 
+
+# --- Quiz Routes ---
 @app.route("/seasons/<show_name>")
 def seasons_page(show_name):
-    return render_template('seasons.html', show_name=show_name)
+    return render_template('seasons.html', show_name=show_name) # Assuming template exists
 
 @app.route("/quiz", methods=["GET", "POST"])
 def quiz():
+    # This function remains unchanged from your original app.py
     if request.method == "GET":
         show_name = request.args.get('show_name')
         season = request.args.get('season', type=int)
-        
         if show_name and season:
             questions = Question.query.filter_by(show_name=show_name, season=season).all()
             if not questions:
                 flash(f"No questions found for {show_name} Season {season}.", "warning")
                 return redirect(url_for("home"))
-            
             session['question_ids'] = [q.question_id for q in questions]
             session['q_index'] = 0
             session['score'] = 0
@@ -206,13 +169,10 @@ def quiz():
             session['season'] = season
             session['total_questions'] = len(questions)
         else:
-            # If quiz is started without params, redirect home
             return redirect(url_for("home"))
-
     if 'q_index' not in session or 'question_ids' not in session:
         flash("Please select a quiz to start.", "warning")
         return redirect(url_for("home"))
-
     if request.method == "POST":
         selected_option_id = request.form.get("option")
         if selected_option_id:
@@ -220,24 +180,19 @@ def quiz():
             if option and option.is_correct:
                 session['score'] += 1
         session['q_index'] += 1
-
     q_index = session.get('q_index', 0)
     total_questions = session.get('total_questions', 0)
-
     if q_index >= total_questions:
         return redirect(url_for("quiz_result"))
-
     current_question_id = session['question_ids'][q_index]
     question = Question.query.get(current_question_id)
-    
     return render_template("quiz.html", question=question, current_q_num=q_index + 1, total_questions=total_questions)
-
 
 @app.route("/quiz_result")
 def quiz_result():
+    # This function remains unchanged from your original app.py
     score = session.get('score', 0)
     total = session.get('total_questions', 0)
-    
     if 'user_id' in session:
         new_result = QuizResult(
             user_id=session['user_id'],
@@ -248,15 +203,9 @@ def quiz_result():
         )
         db.session.add(new_result)
         db.session.commit()
-    
-    # Clear session data related to the quiz
-    session.pop('question_ids', None)
-    session.pop('q_index', None)
-    session.pop('score', None)
-    session.pop('show_name', None)
-    session.pop('season', None)
-    session.pop('total_questions', None)
-    
+    # Clear session data
+    for key in ['question_ids', 'q_index', 'score', 'show_name', 'season', 'total_questions']:
+        session.pop(key, None)
     return render_template("result.html", score=score, total=total)
 
 @app.route("/profile")
@@ -274,6 +223,226 @@ def leaderboard():
     return render_template('leaderboard.html', scores=scores)
 
 
-if __name__ == '__main__':
-    app.run(debug=True)
+# ======================================================================
+# --- INTEGRATED FORUM API ENDPOINTS ---
+# ======================================================================
 
+@app.route('/posts/<string:series_name>', methods=['GET'])
+def get_posts(series_name):
+    connection = get_db_connection()
+    if connection is None:
+        return jsonify({'error': 'Could not connect to database.'}), 500
+
+    posts_data = []
+    try:
+        cursor = connection.cursor(dictionary=True)
+        # Fetch posts with author names
+        sql = """
+            SELECT p.id, p.series, p.title, p.content, p.author_id, u.name as author_name, p.timestamp
+            FROM posts p
+            JOIN users u ON p.author_id = u.sno
+            WHERE p.series = %s
+            ORDER BY p.timestamp DESC;
+        """
+        cursor.execute(sql, (series_name,))
+        posts_results = cursor.fetchall()
+
+        # For each post, fetch comments and votes
+        for post in posts_results:
+            # Fetch comments with author names
+            comment_sql = """
+                SELECT c.id, c.content, c.author_id, u.name as author_name, c.timestamp
+                FROM comments c
+                JOIN users u ON c.author_id = u.sno
+                WHERE c.post_id = %s
+                ORDER BY c.timestamp ASC;
+            """
+            cursor.execute(comment_sql, (post['id'],))
+            comments = cursor.fetchall()
+            post['comments'] = comments
+
+            # Fetch vote user IDs
+            vote_sql = "SELECT user_id, vote_type FROM votes WHERE post_id = %s;"
+            cursor.execute(vote_sql, (post['id'],))
+            vote_results = cursor.fetchall()
+
+            post['upvotes'] = [v['user_id'] for v in vote_results if v['vote_type'] == 'upvote']
+            post['downvotes'] = [v['user_id'] for v in vote_results if v['vote_type'] == 'downvote']
+            posts_data.append(post)
+
+        return jsonify(posts_data)
+    except mysql.connector.Error as err:
+        return jsonify({'error': f'Database error: {err}'}), 500
+    finally:
+        if connection and connection.is_connected():
+            cursor.close()
+            connection.close()
+
+
+@app.route('/posts', methods=['POST'])
+def create_post():
+    if 'user_id' not in session:
+        return jsonify({'error': 'Authentication required'}), 401
+
+    data = request.json
+    if not all(k in data for k in ['series', 'title', 'content']):
+        return jsonify({'error': 'Missing data'}), 400
+
+    connection = get_db_connection()
+    if connection is None:
+        return jsonify({'error': 'Could not connect to database.'}), 500
+
+    try:
+        cursor = connection.cursor()
+        new_post_id = str(uuid.uuid4())
+        sql = "INSERT INTO posts (id, series, title, content, author_id, timestamp) VALUES (%s, %s, %s, %s, %s, %s)"
+        values = (new_post_id, data['series'], data['title'], data['content'], session['user_id'], datetime.datetime.now())
+        cursor.execute(sql, values)
+        connection.commit()
+        return jsonify({'message': 'Post created successfully', 'id': new_post_id}), 201
+    except mysql.connector.Error as err:
+        return jsonify({'error': f'Database error: {err}'}), 500
+    finally:
+        if connection and connection.is_connected():
+            cursor.close()
+            connection.close()
+
+@app.route('/posts/<string:post_id>', methods=['DELETE'])
+def delete_post(post_id):
+    if 'user_id' not in session:
+        return jsonify({'error': 'Authentication required'}), 401
+
+    user_id = session['user_id']
+    is_admin = session.get('is_admin', False)
+
+    connection = get_db_connection()
+    if connection is None:
+        return jsonify({'error': 'Could not connect to database.'}), 500
+
+    try:
+        cursor = connection.cursor()
+        cursor.execute("SELECT author_id FROM posts WHERE id = %s", (post_id,))
+        post_author = cursor.fetchone()
+
+        if not post_author:
+            return jsonify({'error': 'Post not found'}), 404
+        
+        # post_author is a tuple, e.g., (5,)
+        if post_author[0] != user_id and not is_admin:
+            return jsonify({'error': 'Unauthorized to delete this post'}), 403
+
+        cursor.execute("DELETE FROM posts WHERE id = %s", (post_id,))
+        connection.commit()
+        return jsonify({'message': 'Post deleted successfully'}), 200
+    except mysql.connector.Error as err:
+        return jsonify({'error': f'Database error: {err}'}), 500
+    finally:
+        if connection and connection.is_connected():
+            cursor.close()
+            connection.close()
+
+
+@app.route('/posts/<string:post_id>/vote', methods=['POST'])
+def vote_post(post_id):
+    if 'user_id' not in session:
+        return jsonify({'error': 'Authentication required'}), 401
+    
+    user_id = session['user_id']
+    vote_type = request.json.get('voteType')
+    if vote_type not in ['upvote', 'downvote']:
+        return jsonify({'error': 'Invalid vote type'}), 400
+
+    connection = get_db_connection()
+    if connection is None:
+        return jsonify({'error': 'Could not connect to database.'}), 500
+    
+    try:
+        cursor = connection.cursor()
+        cursor.execute("SELECT vote_type FROM votes WHERE post_id = %s AND user_id = %s", (post_id, user_id))
+        existing_vote = cursor.fetchone()
+
+        if existing_vote:
+            if existing_vote[0] == vote_type: # Unvoting
+                cursor.execute("DELETE FROM votes WHERE post_id = %s AND user_id = %s", (post_id, user_id))
+            else: # Changing vote
+                cursor.execute("UPDATE votes SET vote_type = %s WHERE post_id = %s AND user_id = %s", (vote_type, post_id, user_id))
+        else: # New vote
+            cursor.execute("INSERT INTO votes (id, post_id, user_id, vote_type) VALUES (%s, %s, %s, %s)", (str(uuid.uuid4()), post_id, user_id, vote_type))
+        
+        connection.commit()
+        return jsonify({'message': 'Vote cast successfully'}), 200
+    except mysql.connector.Error as err:
+        return jsonify({'error': f'Database error: {err}'}), 500
+    finally:
+        if connection and connection.is_connected():
+            cursor.close()
+            connection.close()
+
+
+@app.route('/posts/<string:post_id>/comments', methods=['POST'])
+def add_comment(post_id):
+    if 'user_id' not in session:
+        return jsonify({'error': 'Authentication required'}), 401
+
+    data = request.json
+    if not data or 'content' not in data:
+        return jsonify({'error': 'Missing comment content'}), 400
+    
+    connection = get_db_connection()
+    if connection is None:
+        return jsonify({'error': 'Could not connect to database.'}), 500
+
+    try:
+        cursor = connection.cursor()
+        new_comment_id = str(uuid.uuid4())
+        sql = "INSERT INTO comments (id, post_id, content, author_id, timestamp) VALUES (%s, %s, %s, %s, %s)"
+        values = (new_comment_id, post_id, data['content'], session['user_id'], datetime.datetime.now())
+        cursor.execute(sql, values)
+        connection.commit()
+        return jsonify({'message': 'Comment added successfully', 'id': new_comment_id}), 201
+    except mysql.connector.Error as err:
+        return jsonify({'error': f'Database error: {err}'}), 500
+    finally:
+        if connection and connection.is_connected():
+            cursor.close()
+            connection.close()
+
+
+@app.route('/posts/<string:post_id>/comments/<string:comment_id>', methods=['DELETE'])
+def delete_comment(post_id, comment_id):
+    if 'user_id' not in session:
+        return jsonify({'error': 'Authentication required'}), 401
+    
+    user_id = session['user_id']
+    is_admin = session.get('is_admin', False)
+
+    connection = get_db_connection()
+    if connection is None:
+        return jsonify({'error': 'Could not connect to database.'}), 500
+
+    try:
+        cursor = connection.cursor()
+        cursor.execute("SELECT author_id FROM comments WHERE id = %s AND post_id = %s", (comment_id, post_id))
+        comment_author = cursor.fetchone()
+        
+        if not comment_author:
+            return jsonify({'error': 'Comment not found'}), 404
+            
+        if comment_author[0] != user_id and not is_admin:
+            return jsonify({'error': 'Unauthorized to delete this comment'}), 403
+            
+        cursor.execute("DELETE FROM comments WHERE id = %s", (comment_id,))
+        connection.commit()
+        return jsonify({'message': 'Comment deleted successfully'}), 200
+    except mysql.connector.Error as err:
+        return jsonify({'error': f'Database error: {err}'}), 500
+    finally:
+        if connection and connection.is_connected():
+            cursor.close()
+            connection.close()
+
+
+# --- Run the App ---
+if __name__ == '__main__':
+    # Use a different port if needed, e.g., 5000
+    app.run(host='0.0.0.0', port=5001, debug=True)
