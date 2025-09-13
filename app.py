@@ -1,6 +1,8 @@
 import uuid
 import datetime
 import mysql.connector
+import pymysql
+import pymysql.cursors
 import os
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 from flask_sqlalchemy import SQLAlchemy
@@ -20,10 +22,13 @@ DB_USER = os.getenv('DB_USER', 'root')
 DB_PASSWORD = os.getenv('DB_PASSWORD', '')
 DB_NAME = os.getenv('DB_NAME', 'leetflix')
 
-# SQLAlchemy Configuration
-app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}'
+# SQLAlchemy Configuration: prefer an explicit env var if set (useful for docker-compose)
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('SQLALCHEMY_DATABASE_URI') or f'mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
+# Improve resilience: enable pool_pre_ping so dropped connections are detected and recycled
+app.config.setdefault('SQLALCHEMY_ENGINE_OPTIONS', {})
+app.config['SQLALCHEMY_ENGINE_OPTIONS'].setdefault('pool_pre_ping', True)
 
 
 # --- Database Models (SQLAlchemy ORM) ---
@@ -72,7 +77,26 @@ class Login(db.Model):
 # --- Raw DB Connection for Forum API ---
 # This uses the raw connector, as in the original forum.py
 def get_db_connection():
-    """Establishes and returns a connection to the MySQL database."""
+    """Establishes and returns a connection to the MySQL database.
+
+    This prefers PyMySQL (compatible with SQLAlchemy's pymysql driver) and falls
+    back to mysql.connector if PyMySQL cannot connect for any reason.
+    """
+    # Try PyMySQL first
+    try:
+        conn = pymysql.connect(
+            host=DB_HOST,
+            user=DB_USER,
+            password=DB_PASSWORD,
+            database=DB_NAME,
+            cursorclass=pymysql.cursors.DictCursor,
+            autocommit=False
+        )
+        return conn
+    except Exception as e:
+        print(f"PyMySQL connection failed, trying mysql.connector: {e}")
+
+    # Fallback to mysql.connector
     try:
         connection = mysql.connector.connect(
             host=DB_HOST,
@@ -82,7 +106,7 @@ def get_db_connection():
         )
         return connection
     except mysql.connector.Error as err:
-        print(f"Error connecting to MySQL: {err}")
+        print(f"Error connecting to MySQL (mysql.connector): {err}")
         return None
 
 # --- Main App Routes ---
@@ -92,15 +116,15 @@ def home():
 
 @app.route("/forum")
 def forum_page():
+    # Allow guests to view the forum. If not logged in, provide a guest user_info.
     if 'user_id' not in session:
-        flash("Please log in to view discussions.", "warning")
-        return redirect(url_for('login_page'))
-
-    user_info = {
-        "id": session['user_id'],
-        "name": session['user_name'],
-        "is_admin": session.get('is_admin', False)
-    }
+        user_info = {"id": None, "name": "Guest", "is_admin": False}
+    else:
+        user_info = {
+            "id": session['user_id'],
+            "name": session.get('user_name', 'Unknown User'), # Use .get for safety
+            "is_admin": session.get('is_admin', False)
+        }
     return render_template('forum.html', user_info=user_info)
 
 # --- Authentication Routes ---
@@ -114,8 +138,7 @@ def login_page():
             session['user_id'] = user.sno
             session['user_name'] = user.name
             # Example of setting an admin flag. Adjust logic as needed.
-            if email.endswith('@admin.leetflix.com'):
-                session['is_admin'] = True
+            session['is_admin'] = email.endswith('@admin.leetflix.com')
             flash("Login successful!", "success")
             return redirect(url_for('home'))
         else:
@@ -444,5 +467,8 @@ def delete_comment(post_id, comment_id):
 
 # --- Run the App ---
 if __name__ == '__main__':
-    # Use a different port if needed, e.g., 5000
-    app.run(host='0.0.0.0', port=5001, debug=True)
+    # Port can be configured with the PORT env var (useful for Docker). Default: 5000
+    port = int(os.getenv('PORT', '5000'))
+    debug = os.getenv('FLASK_DEBUG', '1') == '1'
+    app.run(host='0.0.0.0', port=port, debug=debug)
+

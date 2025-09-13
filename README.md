@@ -47,7 +47,13 @@ cd leetflix
 3️⃣ Spin up everything (app + forum + MySQL):
 
 ```bash
-docker-compose up --build
+docker-compose build --no-cache app
+docker-compose up -d db
+# wait a little for DB to finish initialization (watch logs)
+docker-compose logs -f db
+# then start the app
+docker-compose up -d app
+docker-compose logs -f app
 ```
 
 4️⃣ Open in browser:
