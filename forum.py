@@ -5,6 +5,17 @@ import mysql.connector
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
+import os
+
+forum = Flask(__name__)
+
+forum.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('SQLALCHEMY_DATABASE_URI', 'sqlite:///default.db')
+forum.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+db = SQLAlchemy(forum)
+
+
+
 # --- Database Configuration ---
 # IMPORTANT: Replace these with your actual MySQL database credentials.
 DB_HOST = "localhost"
