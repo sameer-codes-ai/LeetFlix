@@ -30,8 +30,6 @@
         const API_URL = ''; // The base URL is the same as the page, so this is empty.
 
         // --- User Information (Passed from Flask) ---
-        // Read the JSON from the <script type="application/json"> block so static analyzers
-        // and IDEs don't see raw Jinja syntax inside JS code.
         let userInfo = {};
         try {
             const raw = document.getElementById('user-info')?.textContent || '{}';
@@ -88,7 +86,6 @@
             document.getElementById('closeModalBtn').onclick = toggleModal;
             document.getElementById('postForm').onsubmit = handlePostSubmit;
 
-            // **Centralized Event Listener** for all actions within posts
             document.getElementById('postsContainer').addEventListener('click', handlePostActions);
         }
         
@@ -209,7 +206,8 @@
             const postsContainer = document.getElementById('postsContainer');
             postsContainer.innerHTML = '<p class="text-center text-gray-400">Loading discussions...</p>';
             try {
-                const response = await fetch(`${API_URL}/posts/${seriesName}`);
+                // ✅ Encode series name for safe URL
+                const response = await fetch(`${API_URL}/posts/${encodeURIComponent(seriesName)}`);
                 if (!response.ok) throw new Error('Network response was not ok');
                 const posts = await response.json();
                 postsContainer.innerHTML = '';
@@ -367,4 +365,3 @@
 
 </body>
 </html>
-
