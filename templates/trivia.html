@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LeetFlix</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -40,6 +41,7 @@
       align-items: center;
       padding: 15px 30px;
       background: rgba(10, 10, 10, 0.7);
+      -webkit-backdrop-filter: blur(10px);
       backdrop-filter: blur(10px);
       border-bottom: 1px solid rgba(255,255,255,0.1);
       animation: fadeInDown 0.6s ease-out;
@@ -95,7 +97,6 @@
       gap: 20px;
       padding: 20px;
       background: rgba(18, 18, 18, 0.7);
-      backdrop-filter: blur(10px);
       animation: fadeInDown 0.6s ease-out 0.1s;
       animation-fill-mode: backwards;
     }
@@ -244,7 +245,8 @@
   <!-- Filter Bar -->
   <div class="filter-bar">
     <input type="text" id="search-bar" placeholder="Search for a show...">
-    <select id="genre-filter">
+    <label for="genre-filter" style="position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden;">Filter by Genre</label>
+    <select id="genre-filter" name="genre-filter">
       <option value="all">All Genres</option>
       <option value="sitcom">Sitcom</option>
       <option value="thriller">Thriller</option>

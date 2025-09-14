@@ -112,7 +112,7 @@ def get_db_connection():
 # --- Main App Routes ---
 @app.route("/")
 def home():
-    return render_template('trivia.html') # Assuming you have this template
+    return render_template('trivia.html')
 
 @app.route("/forum")
 def forum_page():
@@ -122,7 +122,7 @@ def forum_page():
     else:
         user_info = {
             "id": session['user_id'],
-            "name": session.get('user_name', 'Unknown User'), # Use .get for safety
+            "name": session.get('user_name', 'Unknown User'), 
             "is_admin": session.get('is_admin', False)
         }
     return render_template('forum.html', user_info=user_info)
@@ -143,7 +143,7 @@ def login_page():
             return redirect(url_for('home'))
         else:
             flash("Invalid email or password!", "danger")
-    return render_template('login.html') # Assuming you have this template
+    return render_template('login.html') 
 
 @app.route('/logout')
 def logout():
@@ -166,17 +166,17 @@ def register():
         db.session.commit()
         flash("Registration successful! Please log in.", "success")
         return redirect(url_for('login_page'))
-    return render_template('register.html') # Assuming you have this template
+    return render_template('register.html') 
 
 
 # --- Quiz Routes ---
 @app.route("/seasons/<show_name>")
 def seasons_page(show_name):
-    return render_template('seasons.html', show_name=show_name) # Assuming template exists
+    return render_template('seasons.html', show_name=show_name)
 
 @app.route("/quiz", methods=["GET", "POST"])
 def quiz():
-    # This function remains unchanged from your original app.py
+    
     if request.method == "GET":
         show_name = request.args.get('show_name')
         season = request.args.get('season', type=int)
@@ -213,7 +213,6 @@ def quiz():
 
 @app.route("/quiz_result")
 def quiz_result():
-    # This function remains unchanged from your original app.py
     score = session.get('score', 0)
     total = session.get('total_questions', 0)
     if 'user_id' in session:
