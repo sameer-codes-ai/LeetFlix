@@ -101,10 +101,6 @@ def get_db_connection():
 @app.route("/")
 def home():
     return render_template('trivia.html')
-<<<<<<< HEAD
-
-=======
->>>>>>> 0f308112a8e87b50414b0e2b2342d7bee2e6f8ca
 
 @app.route("/forum")
 def forum_page():
@@ -113,11 +109,7 @@ def forum_page():
     else:
         user_info = {
             "id": session['user_id'],
-<<<<<<< HEAD
-            "name": session.get('user_name', 'Unknown User'),
-=======
             "name": session.get('user_name', 'Unknown User'), 
->>>>>>> 0f308112a8e87b50414b0e2b2342d7bee2e6f8ca
             "is_admin": session.get('is_admin', False)
         }
     return render_template('forum.html', user_info=user_info)
@@ -138,12 +130,7 @@ def login_page():
             return redirect(url_for('home'))
         else:
             flash("Invalid email or password!", "danger")
-<<<<<<< HEAD
-    return render_template('login.html')
-
-=======
     return render_template('login.html') 
->>>>>>> 0f308112a8e87b50414b0e2b2342d7bee2e6f8ca
 
 @app.route('/logout')
 def logout():
@@ -167,28 +154,17 @@ def register():
         db.session.commit()
         flash("Registration successful! Please log in.", "success")
         return redirect(url_for('login_page'))
-<<<<<<< HEAD
-    return render_template('register.html')
-=======
     return render_template('register.html') 
->>>>>>> 0f308112a8e87b50414b0e2b2342d7bee2e6f8ca
 
 
 # --- Quiz Routes ---
 @app.route("/seasons/<show_name>")
 def seasons_page(show_name):
     return render_template('seasons.html', show_name=show_name)
-<<<<<<< HEAD
-
-
-@app.route("/quiz", methods=["GET", "POST"])
-def quiz():
-=======
 
 @app.route("/quiz", methods=["GET", "POST"])
 def quiz():
     
->>>>>>> 0f308112a8e87b50414b0e2b2342d7bee2e6f8ca
     if request.method == "GET":
         show_name = request.args.get('show_name')
         season = request.args.get('season', type=int)
