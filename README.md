@@ -37,6 +37,9 @@ Welcome to **LeetFlix** – your one-stop platform to track Binge-Watching progr
 
 ## 🚀 How to Run Using Prebuilt Platform-Independent Docker Image (Plug & Play ⚡)
 
+Quick trial (Only when server is running) : https://jmcstjj1-5000.inc1.devtunnels.ms/
+
+Professional way:
 This is the easiest way to run LeetFlix without worrying about local setup or building the image.
 
 1️⃣ Make sure [Docker](https://www.docker.com/get-started) is installed and running.
